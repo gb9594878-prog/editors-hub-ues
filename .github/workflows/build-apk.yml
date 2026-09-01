@@ -21,29 +21,25 @@ jobs:
 
       - name: Find App & Install
         run: |
-          ls -la
           APP_FILE=$(find . -maxdepth 4 -type f -name "app.json" | head -1)
           if [ -z "$APP_FILE" ]; then APP_DIR="."; else APP_DIR=$(dirname "$APP_FILE"); fi
           echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
           echo "App dir: $APP_DIR"
           
           pnpm install --no-frozen-lockfile
-          
           cd "$APP_DIR"
-          echo "Installing in $APP_DIR"
           pnpm install --no-frozen-lockfile || true
-          
           if [ ! -d "node_modules/expo" ]; then
-            echo "expo missing, adding with -w..."
             pnpm add -w expo
           fi
-          
-          ls node_modules | grep expo || ls ../node_modules | grep expo
 
       - name: Prebuild Android
         run: |
           cd "${{ env.APP_DIR }}"
-          pnpm exec expo prebuild --platform android --clean
+          # --no-install = permission nahi mangega, isliye fail nahi hoga
+          pnpm exec expo prebuild --platform android --clean --no-install
+          # ab updated deps ko install kar lo
+          pnpm install --no-frozen-lockfile
 
       - name: Build APK
         run: |
