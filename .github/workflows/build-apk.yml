@@ -18,8 +18,8 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: rm -rf node_modules android && echo "shamefully-hoist=true" >.npmrc
       - run: pnpm install --no-frozen-lockfile
-      - run: npx expo prebuild --platform android --clean --no-install
-      - run: sed -i 's/gradle-.*-bin.zip/gradle-9.4.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties && cat android/gradle/wrapper/gradle-wrapper.properties
+      - run: pnpm dlx expo@57.0.19 prebuild --platform android --clean --no-install
+      - run: sed -i 's/gradle-.*-bin.zip/gradle-9.4.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
       - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
