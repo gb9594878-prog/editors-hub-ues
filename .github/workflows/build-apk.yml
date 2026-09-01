@@ -1,34 +1,54 @@
 name: build
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
-      - uses: actions/setup-java@v4
+          cache: pnpm
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install deps
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
-      - name: Prebuild android
+
+      - name: Prebuild Android (Expo)
         working-directory: editor-hub
         run: npx expo prebuild --platform android --clean --non-interactive
+        env:
+          EXPO_NO_TELEMETRY: 1
+          CI: 1
+
       - name: Build APK
         working-directory: editor-hub/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
-      - name: Upload APK
+          ./gradlew assembleRelease --no-daemon -x lint
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: EditorsHub-APK
           path: editor-hub/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
