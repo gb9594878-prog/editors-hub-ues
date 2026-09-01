@@ -19,11 +19,18 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Install deps
-        run: pnpm install --no-frozen-lockfile
+      - name: Install deps (FORCE)
+        run: |
+          pnpm install --no-frozen-lockfile
+          # Agar expo phir bhi nahi hai to zabardasti install karo
+          if [ ! -d "node_modules/expo" ]; then
+            echo "expo not found, installing manually..."
+            pnpm add expo
+          fi
+          ls node_modules | grep expo
 
       - name: Prebuild Android
-        run: npx --yes expo@latest prebuild --platform android --clean
+        run: npx expo prebuild --platform android --clean
         env:
           CI: 1
 
