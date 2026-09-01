@@ -24,10 +24,18 @@ jobs:
       - name: Install deps
         run: pnpm install --no-frozen-lockfile
 
+      - name: Find project structure
+        run: |
+          pwd
+          ls -la
+          cat pnpm-workspace.yaml 2>&1 || echo "no workspace file"
+          find . -maxdepth 3 -name "app.json" -o -name "app.config.*"
+
       - name: Prebuild Android
-        run: pnpm exec expo prebuild --platform android --clean
+        run: npx --yes expo prebuild --platform android --clean
         env:
           CI: 1
+          EXPO_NO_TELEMETRY: 1
 
       - name: Build APK
         run: |
