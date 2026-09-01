@@ -1,37 +1,48 @@
 name: build
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
-        with: { version: 9 }
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: pnpm }
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 17 }
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - uses: android-actions/setup-android@v3
 
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
-       - name: Prebuild
+      - name: Prebuild
         run: |
           pnpm add -w -D @expo/cli
           pnpm -w exec expo prebuild --platform android --clean
           echo "org.gradle.jvmargs=-Xmx6g" >> android/gradle.properties
+
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease -x lint
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
+         ./gradlew assembleRelease -x lint
 
-      - name: Upload
-        if: success()
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: EditorsHub-APK
+          name: app-release
           path: android/app/build/outputs/apk/release/*.apk
