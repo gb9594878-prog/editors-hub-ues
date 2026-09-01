@@ -19,38 +19,26 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Install deps (MONOREPO FIX)
+      - name: Show files (to find app)
         run: |
-          # Root + saare workspaces me install
-          pnpm install --no-frozen-lockfile
-          pnpm -r install --no-frozen-lockfile || true
-          
-          # App folder dhoondo jahan app.json hai
-          APP_DIR=$(find . -maxdepth 4 -name "app.json" | head -1 | xargs dirname)
-          if [ -z "$APP_DIR" ]; then APP_DIR="."; fi
-          echo "App found at: $APP_DIR"
-          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
-          ls -la $APP_DIR
+          pwd
+          ls -la
+          ls -la editors-hub-ues 2>&1 || true
+          find . -maxdepth 3 -type f -name "package.json" | head -20
+          find . -maxdepth 4 -type f \( -name "app.json" -o -name "app.config.*" \) | head -20
 
-      - name: Fix expo in app folder
-        run: |
-          echo "Fixing in $APP_DIR"
-          cd ${{ env.APP_DIR }}
-          if [ ! -d "node_modules/expo" ]; then
-            echo "expo missing in app folder, installing..."
-            pnpm add expo || npm install expo --legacy-peer-deps
-          fi
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
 
       - name: Prebuild Android
-        run: |
-          cd ${{ env.APP_DIR }}
-          npx expo prebuild --platform android --clean
+        working-directory: ./editors-hub-ues
+        run: npx expo prebuild --platform android --clean
         env:
           CI: 1
 
       - name: Build APK
+        working-directory: ./editors-hub-ues/android
         run: |
-          cd ${{ env.APP_DIR }}/android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -x lint
 
@@ -58,4 +46,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
-          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/*.apk
+          path: editors-hub-ues/android/app/build/outputs/apk/release/*.apk
