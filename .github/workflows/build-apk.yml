@@ -1,7 +1,5 @@
-name: build
+name: Build APK
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -9,40 +7,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'pnpm'
-
+          node-version: 18
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - uses: android-actions/setup-android@v3
-
-      - name: Install
-        run: pnpm install --no-frozen-lockfile
-
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install dependencies
+        run: npm install
       - name: Prebuild
-        run: |
-          pnpm add -w -D @expo/cli
-          pnpm -w exec expo prebuild --platform android --clean
-          echo "org.gradle.jvmargs=-Xmx6g" >> android/gradle.properties
-
+        run: npx expo prebuild --platform android --clean
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-         ./gradlew assembleRelease -x lint
-
+          ./gradlew assembleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/*.apk
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
