@@ -1,24 +1,84 @@
-name: build
+name: build-apk-mega-fix
 on: [push]
+
 jobs:
- build:
-  runs-on: ubuntu-latest
-  steps:
-   - uses: actions/checkout@v4
-   - uses: pnpm/action-setup@v4
-     with: { version: 9 }
-   - uses: actions/setup-node@v4
-     with: { node-version: 20 }
-   - uses: actions/setup-java@v4
-     with: { distribution: 'temurin', java-version: '17' }
-   - uses: android-actions/setup-android@v3
-   - run: rm -rf node_modules android
-   - run: echo "shamefully-hoist=true" >.npmrc
-   - run: pnpm add -w expo@57.0.19
-   - run: pnpm install --no-frozen-lockfile
-   - run: npx expo prebuild --platform android --clean --no-install
-   - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
-   - uses: actions/upload-artifact@v4
-     with:
-       name: apk
-       path: android/app/build/outputs/apk/debug/app-debug.apk
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Code Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Tools
+      - name: Setup pnpm 9
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: false
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 3. PNPM Fix - Tera main error
+      - name: Fix pnpm hoist error
+        run: |
+          rm -rf node_modules
+          rm -rf android
+          rm -rf.expo
+          rm -rf pnpm-lock.yaml
+          echo "shamefully-hoist=true" >.npmrc
+          echo "node-linker=hoisted" >>.npmrc
+          echo "auto-install-peers=true" >>.npmrc
+          echo "strict-peer-dependencies=false" >>.npmrc
+          cat.npmrc
+
+      # 4. Expo Fix - Stable version
+      - name: Install Expo Stable
+        run: |
+          pnpm add -w expo@52.0.46
+          pnpm add -w @expo/config-plugins
+          pnpm add -w @expo/prebuild-config
+
+      # 5. Install all deps
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile --shamefully-hoist
+
+      # 6. Prebuild Android
+      - name: Prebuild Android
+        run: npx expo prebuild --platform android --clean --no-install
+
+      # 7. GRADLE FIX - Ye tera ab wala error hai (9.4.1 chahiye)
+      - name: Fix Gradle Version to 9.4.1
+        run: |
+          cd android
+          echo "Before fix:"
+          cat gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/gradle-.*-bin.zip/gradle-9.4.1-bin.zip/' gradle/wrapper/gradle-wrapper.properties
+          echo "After fix:"
+          cat gradle/wrapper/gradle-wrapper.properties
+          chmod +x gradlew
+          ls -la gradlew
+
+      # 8. Build APK
+      - name: Build Debug APK
+        run: |
+          cd android
+         ./gradlew assembleDebug --stacktrace --no-daemon
+
+      # 9. Check APK exists
+      - name: Check APK
+        run: |
+          ls -
