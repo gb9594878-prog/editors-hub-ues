@@ -1,7 +1,5 @@
 name: build
-on:
-  push:
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,27 +12,30 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
-
-      - name: Install deps
+      
+      - name: Install
         run: |
           pnpm install --no-frozen-lockfile
-          ls node_modules/.bin | grep expo || pnpm add -w expo @expo/cli
+          pnpm add -w expo @expo/cli || true
 
       - name: Prebuild
         run: |
           npx expo prebuild --platform android --clean --no-install
           pnpm install --no-frozen-lockfile
 
+      - name: Check JS Bundle First (Real Error Yaha Dikhega)
+        run: |
+          export NODE_OPTIONS=--max-old-space-size=4096
+          npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output /tmp/test.bundle --assets-dest /tmp --reset-cache || npx react-native bundle --platform android --dev false --entry-file App.js --bundle-output /tmp/test.bundle --assets-dest /tmp --reset-cache || npx expo export --platform android --dump-sourcemap || true
+          echo "If above failed, the real JS error is printed"
+
       - name: Build APK
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon -x lint --stacktrace > /tmp/log.txt 2>&1 || true
-          cat /tmp/log.txt
-          echo "===== REAL ERROR ====="
-          grep -n -A20 "What went wrong\|FAILED\|error:" /tmp/log.txt | head -n 100
-          # fail again properly to see
-          ./gradlew assembleRelease --no-daemon -x lint
+          ./gradlew assembleRelease -x lint --stacktrace
 
       - name: Upload APK
         if: success()
