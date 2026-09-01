@@ -27,24 +27,22 @@ jobs:
           echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
           echo "App dir: $APP_DIR"
           
-          # Root install
-          pnpm install --no-frozen-lockfile || true
+          pnpm install --no-frozen-lockfile
           
-          # App folder me jaake install + expo force install
           cd "$APP_DIR"
           echo "Installing in $APP_DIR"
           pnpm install --no-frozen-lockfile || true
-          # Agar expo abhi bhi nahi hai toh
+          
           if [ ! -d "node_modules/expo" ]; then
-            pnpm add expo@latest --no-frozen-lockfile
+            echo "expo missing, adding..."
+            pnpm add expo
           fi
+          
           ls node_modules | grep expo
-          cat package.json | grep expo
 
       - name: Prebuild Android
         run: |
           cd "${{ env.APP_DIR }}"
-          # npx ki jagah pnpm exec use karo - ye local expo use karega
           pnpm exec expo prebuild --platform android --clean
 
       - name: Build APK
