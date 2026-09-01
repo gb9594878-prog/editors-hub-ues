@@ -2,7 +2,6 @@ name: build
 on:
   push:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,42 +13,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Install ALL deps (root + workspace)
-        run: |
-          pnpm install --no-frozen-lockfile
-          # agar workspace ke andar hai to wahan bhi install karo
-          for dir in $(find . -maxdepth 3 -name "package.json" -exec dirname {} \; | head -10); do
-            echo "Installing in $dir"
-            (cd $dir && pnpm install --no-frozen-lockfile || true)
-          done
-          npm install -g expo-cli eas-cli || true
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
 
-      - name: Prebuild Android (auto-find)
-        run: |
-          APP_DIR=$(find . -maxdepth 4 -name "app.json" -exec dirname {} \; | head -1)
-          if [ -z "$APP_DIR" ]; then
-            APP_DIR="."
-          fi
-          echo "Expo project found at: $APP_DIR"
-          ls -la $APP_DIR
-          cd $APP_DIR
-          npx --yes expo prebuild --platform android --clean
+      - name: Prebuild Android
+        run: npx --yes expo@latest prebuild --platform android --clean
         env:
           CI: 1
-          EXPO_NO_TELEMETRY: 1
 
-      - name: Build APK (auto-find android folder)
+      - name: Build APK
         run: |
-          ANDROID_DIR=$(find . -name "gradlew" -exec dirname {} \; | head -1)
-          echo "Android dir: $ANDROID_DIR"
-          cd $ANDROID_DIR
+          cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -x lint
 
@@ -57,6 +37,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
-          path: |
-            **/android/app/build/outputs/apk/release/*.apk
-            android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
