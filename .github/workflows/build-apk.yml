@@ -29,9 +29,15 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon -x lint --stacktrace > /tmp/log.txt 2>&1 || true
+          cat /tmp/log.txt
+          echo "===== REAL ERROR ====="
+          grep -n -A20 "What went wrong\|FAILED\|error:" /tmp/log.txt | head -n 100
+          # fail again properly to see
           ./gradlew assembleRelease --no-daemon -x lint
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
