@@ -16,11 +16,19 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - run: rm -rf node_modules android && echo "shamefully-hoist=true" >.npmrc
+
+      - name: Fix pnpm hoist
+        run: |
+          rm -rf node_modules android
+          echo "shamefully-hoist=true" >.npmrc
+          echo "node-linker=hoisted" >>.npmrc
+          echo "strict-peer-dependencies=false" >>.npmrc
+          cat.npmrc
+
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm dlx expo@57.0.19 prebuild --platform android --clean --no-install
       - run: sed -i 's/gradle-.*-bin.zip/gradle-9.4.1-bin.zip/' android/gradle/wrapper/gradle-wrapper.properties
-      - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
+      - run: cd android && chmod +x gradlew &&./gradlew assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: apk
