@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Editors Hub - UES",
+    "slug": "editors-hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/ues-app-icon.png",
+    "scheme": "editor-hub",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/ues-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#020617"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.ues.editorshub",
+      "icon": "./assets/ues-app-icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/ues-app-icon.png",
+        "backgroundColor": "#020617"
+      }
+    },
+    "web": {
+      "favicon": "./assets/ues-app-icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
