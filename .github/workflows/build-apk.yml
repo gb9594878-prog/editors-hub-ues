@@ -34,11 +34,11 @@ jobs:
           pnpm install --no-frozen-lockfile || true
           
           if [ ! -d "node_modules/expo" ]; then
-            echo "expo missing, adding..."
-            pnpm add expo
+            echo "expo missing, adding with -w..."
+            pnpm add -w expo
           fi
           
-          ls node_modules | grep expo
+          ls node_modules | grep expo || ls ../node_modules | grep expo
 
       - name: Prebuild Android
         run: |
