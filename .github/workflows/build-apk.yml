@@ -20,7 +20,10 @@ jobs:
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter editor-hub exec expo prebuild --platform android --clean
       - run: pnpm --filter editor-hub exec bash -c "cd android && chmod +x gradlew && ./gradlew assembleRelease"
+      - name: Find APK
+        run: find editor-hub -name "*.apk" -type f
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: editor-hub/android/app/build/outputs/apk/release/app-release.apk
+          path: editor-hub/**/app-release.apk
+          if-no-files-found: error
