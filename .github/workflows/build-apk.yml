@@ -14,7 +14,7 @@ jobs:
    - uses: android-actions/setup-android@v3
    - run: echo "shamefully-hoist=true" >.npmrc
    - run: rm -rf node_modules
-   - run: pnpm add expo@57.0.19
+   - run: pnpm add -w expo@57.0.19
    - run: pnpm install --no-frozen-lockfile
    - run: npx expo prebuild --platform android --clean --no-install
    - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
