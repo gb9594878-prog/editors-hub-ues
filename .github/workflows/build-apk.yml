@@ -17,11 +17,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - run: rm -rf artifacts
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter editor-hub exec expo prebuild --platform android --clean
       - run: pnpm --filter editor-hub exec bash -c "cd android && chmod +x gradlew && ./gradlew assembleRelease"
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: artifacts/editor-hub/android/app/build/outputs/apk/release/app-release.apk
+          path: editor-hub/android/app/build/outputs/apk/release/app-release.apk
