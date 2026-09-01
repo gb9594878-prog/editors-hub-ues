@@ -13,8 +13,10 @@ jobs:
      with: { distribution: 'temurin', java-version: '17' }
    - uses: android-actions/setup-android@v3
    - run: echo "shamefully-hoist=true" >.npmrc
+   - run: rm -rf node_modules
+   - run: pnpm add expo@57.0.19 --no-frozen-lockfile
    - run: pnpm install --no-frozen-lockfile
-   - run: npx expo prebuild --platform android --no-install --clean
+   - run: npx expo prebuild --platform android --clean --no-install
    - run: cd android && chmod +x gradlew &&./gradlew assembleDebug
    - uses: actions/upload-artifact@v4
      with: { name: apk, path: android/app/build/outputs/apk/debug/app-debug.apk }
