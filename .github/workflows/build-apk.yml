@@ -11,14 +11,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'pnpm'
       - uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter editor-hub exec expo prebuild --platform android --clean
-      - run: pnpm --filter editor-hub exec bash -c "cd android && ./gradlew assembleRelease"
+      - run: pnpm --filter editor-hub exec bash -c "cd android && chmod +x gradlew && ./gradlew assembleRelease"
       - uses: actions/upload-artifact@v4
         with:
           name: app-release
