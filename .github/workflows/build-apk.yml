@@ -19,26 +19,20 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Show files (to find app)
+      - name: Show files
         run: |
-          pwd
           ls -la
-          ls -la editors-hub-ues 2>&1 || true
-          find . -maxdepth 3 -type f -name "package.json" | head -20
-          find . -maxdepth 4 -type f \( -name "app.json" -o -name "app.config.*" \) | head -20
+          cat package.json | head -30
 
       - name: Install deps
         run: pnpm install --no-frozen-lockfile
 
       - name: Prebuild Android
-        working-directory: ./editors-hub-ues
         run: npx expo prebuild --platform android --clean
-        env:
-          CI: 1
 
       - name: Build APK
-        working-directory: ./editors-hub-ues/android
         run: |
+          cd android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -x lint
 
@@ -46,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
-          path: editors-hub-ues/android/app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/release/*.apk
