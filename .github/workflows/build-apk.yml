@@ -17,13 +17,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm --filter editor-hub exec expo prebuild --platform android --clean
-      - run: pnpm --filter editor-hub exec bash -c "cd android && chmod +x gradlew && ./gradlew assembleRelease"
-      - name: Find APK
-        run: find editor-hub -name "*.apk" -type f
-      - uses: actions/upload-artifact@v4
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
+      - name: Prebuild android
+        working-directory: editor-hub
+        run: npx expo prebuild --platform android --clean --non-interactive
+      - name: Build APK
+        working-directory: editor-hub/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: editor-hub/**/app-release.apk
-          if-no-files-found: error
+          path: editor-hub/android/app/build/outputs/apk/release/*.apk
