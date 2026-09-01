@@ -1,4 +1,4 @@
-name: Build APK
+name: build
 on: [push, workflow_dispatch]
 jobs:
   build:
@@ -17,8 +17,8 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
-      - run: pnpm install
-      - run: npx expo prebuild --platform android --no-install
+      - run: pnpm install --no-frozen-lockfile
+      - run: npx expo prebuild --platform android --clean
       - run: cd android && ./gradlew assembleRelease
       - uses: actions/upload-artifact@v4
         with:
