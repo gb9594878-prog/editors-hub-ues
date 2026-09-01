@@ -19,20 +19,37 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Show files
+      - name: Find App & Install
         run: |
           ls -la
-          cat package.json | head -30
-
-      - name: Install deps
-        run: pnpm install --no-frozen-lockfile
+          APP_FILE=$(find . -maxdepth 4 -type f -name "app.json" | head -1)
+          if [ -z "$APP_FILE" ]; then APP_DIR="."; else APP_DIR=$(dirname "$APP_FILE"); fi
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+          echo "App dir: $APP_DIR"
+          
+          # Root install
+          pnpm install --no-frozen-lockfile || true
+          
+          # App folder me jaake install + expo force install
+          cd "$APP_DIR"
+          echo "Installing in $APP_DIR"
+          pnpm install --no-frozen-lockfile || true
+          # Agar expo abhi bhi nahi hai toh
+          if [ ! -d "node_modules/expo" ]; then
+            pnpm add expo@latest --no-frozen-lockfile
+          fi
+          ls node_modules | grep expo
+          cat package.json | grep expo
 
       - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean
+        run: |
+          cd "${{ env.APP_DIR }}"
+          # npx ki jagah pnpm exec use karo - ye local expo use karega
+          pnpm exec expo prebuild --platform android --clean
 
       - name: Build APK
         run: |
-          cd android
+          cd "${{ env.APP_DIR }}/android"
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -x lint
 
@@ -40,4 +57,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
-          path: android/app/build/outputs/apk/release/*.apk
+          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/*.apk
