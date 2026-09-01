@@ -19,24 +19,38 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
 
-      - name: Install deps (FORCE)
+      - name: Install deps (MONOREPO FIX)
         run: |
+          # Root + saare workspaces me install
           pnpm install --no-frozen-lockfile
-          # Agar expo phir bhi nahi hai to zabardasti install karo
+          pnpm -r install --no-frozen-lockfile || true
+          
+          # App folder dhoondo jahan app.json hai
+          APP_DIR=$(find . -maxdepth 4 -name "app.json" | head -1 | xargs dirname)
+          if [ -z "$APP_DIR" ]; then APP_DIR="."; fi
+          echo "App found at: $APP_DIR"
+          echo "APP_DIR=$APP_DIR" >> $GITHUB_ENV
+          ls -la $APP_DIR
+
+      - name: Fix expo in app folder
+        run: |
+          echo "Fixing in $APP_DIR"
+          cd ${{ env.APP_DIR }}
           if [ ! -d "node_modules/expo" ]; then
-            echo "expo not found, installing manually..."
-            pnpm add expo
+            echo "expo missing in app folder, installing..."
+            pnpm add expo || npm install expo --legacy-peer-deps
           fi
-          ls node_modules | grep expo
 
       - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean
+        run: |
+          cd ${{ env.APP_DIR }}
+          npx expo prebuild --platform android --clean
         env:
           CI: 1
 
       - name: Build APK
         run: |
-          cd android
+          cd ${{ env.APP_DIR }}/android
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon -x lint
 
@@ -44,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: EditorsHub-APK
-          path: android/app/build/outputs/apk/release/*.apk
+          path: ${{ env.APP_DIR }}/android/app/build/outputs/apk/release/*.apk
