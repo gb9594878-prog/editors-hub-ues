@@ -16,12 +16,11 @@ jobs:
       - name: Install
         run: pnpm install --no-frozen-lockfile
 
-      - name: Prebuild
+       - name: Prebuild
         run: |
           pnpm add -w -D @expo/cli
-          pnpm exec expo prebuild --platform android --clean
+          pnpm -w exec expo prebuild --platform android --clean
           echo "org.gradle.jvmargs=-Xmx6g" >> android/gradle.properties
-
       - name: Build APK
         run: |
           cd android
